@@ -1,22 +1,22 @@
 # Smart Bus Stop Frontend Dashboard
 
-A web-based dashboard for managing and monitoring smart bus stops.
+Dashboard web para monitoramento de paradas de ônibus inteligentes, exibindo temperatura, umidade e lista de ônibus.
 
 ## Features
 
-- Real-time bus stop status
-- Interactive maps
-- User-friendly interface
-- Data visualization
+- Status da parada em tempo real  
+- Visualização de temperatura e umidade  
+- Lista de ônibus na parada  
+- Interface responsiva  
 
 ## Getting Started
 
-### Prerequisites
+### Pré-requisitos
 
 - Node.js (v14+)
 - npm or yarn
 
-### Installation
+### Instalação
 
 ```bash
 git clone https://github.com/heytorpimentell/Frontend--Smart-Bus-Stop.git
@@ -24,7 +24,7 @@ cd Frontend--Smart-Bus-Stop
 npm install
 ```
 
-### Running the App
+### Rodando o app
 
 ```bash
 npm start
