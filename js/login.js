@@ -1,6 +1,8 @@
 // js/login.js
 
-document.getElementById('loginForm').addEventListener('submit', function (e) {
+const BACKEND_URL = "https://back-smart-bus-iot-nyp0.onrender.com";
+
+document.getElementById('loginForm').addEventListener('submit', async function (e) {
   e.preventDefault();
 
   const email = document.getElementById('email').value.trim();
@@ -16,12 +18,49 @@ document.getElementById('loginForm').addEventListener('submit', function (e) {
     return;
   }
 
-  // Simula login bem-sucedido
-  localStorage.setItem('token', 'fake-token-123');
-  localStorage.setItem('user', JSON.stringify({ email }));
+  try {
+    // Faz requisição real para o backend
+    const response = await fetch(`${BACKEND_URL}/api/auth/login`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        email: email,
+        password: password
+      })
+    });
 
-  alert('Login realizado com sucesso!');
-  window.location.href = 'index.html'; // Redireciona para dashboard
+    const data = await response.json();
+
+    if (response.ok) {
+      // Login bem-sucedido
+      localStorage.setItem('token', data.access_token);
+      localStorage.setItem('user', JSON.stringify({ 
+        email: email,
+        full_name: data.full_name 
+      }));
+
+      alert('Login realizado com sucesso!');
+      window.location.href = 'index.html';
+    } else {
+      // Erro no login
+      alert(data.detail || 'Erro no login. Verifique suas credenciais.');
+    }
+
+  } catch (error) {
+    console.error('Erro ao fazer login:', error);
+    
+    // Fallback para modo de desenvolvimento
+    if (email === 'test@test.com' && password === '123456') {
+      localStorage.setItem('token', 'fake-token-123');
+      localStorage.setItem('user', JSON.stringify({ email }));
+      alert('Login offline realizado com sucesso!');
+      window.location.href = 'index.html';
+    } else {
+      alert('Erro de conexão. Tente novamente ou use test@test.com / 123456 para modo offline.');
+    }
+  }
 });
 
 // Esqueceu a senha (simulação)

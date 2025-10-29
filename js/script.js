@@ -18,7 +18,7 @@ function logout() {
 /* --------------------------------------------------------------
    CONFIGURAÇÕES
    -------------------------------------------------------------- */
-const BACKEND_URL = "http://seu-backend.com/api";   // <--- ALTERE QUANDO TIVER BACKEND
+const BACKEND_URL = "https://back-smart-bus-iot-nyp0.onrender.com";   // URL corrigida (removido o duplo h)
 const pollInterval = 2000;                         // 2 s
 const maxPoints = 30;                              // pontos no gráfico
 
@@ -52,28 +52,67 @@ const chart = new Chart(ctx, {
 });
 
 /* --------------------------------------------------------------
-   SIMULAÇÃO DE DADOS (para teste sem backend)
+   FUNÇÃO PARA BUSCAR DADOS DO BACKEND
    -------------------------------------------------------------- */
 let counter = 0;
 async function fetchData() {
-  // ---- DADOS FALSOS ----
-  const temp = 22 + Math.sin(counter / 10) * 12;   // 10-34 °C
-  const hum  = 55 + Math.cos(counter / 10) * 25;   // 30-80 %
-  const buses = Math.random() > 0.6 ? ['Ônibus 101', 'Ônibus 205'] : [];
+  try {
+    // Tenta buscar dados reais do ThingSpeak via backend
+    const response = await fetch(`${BACKEND_URL}/api/sensors/test_thingspeak`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        'Content-Type': 'application/json'
+      }
+    });
 
+    if (response.ok) {
+      const data = await response.json();
+      
+      // Usa os dados reais se disponíveis
+      const temp = parseFloat(data.temperature) || (22 + Math.sin(counter / 10) * 12);
+      const hum = parseFloat(data.humidity) || (55 + Math.cos(counter / 10) * 25);
+      
+      updateUI(temp, hum);
+    } else {
+      // Fallback para dados simulados se o backend não responder
+      useFallbackData();
+    }
+  } catch (error) {
+    console.warn('Erro ao conectar com backend, usando dados simulados:', error);
+    useFallbackData();
+  }
+}
+
+function useFallbackData() {
+  // ---- DADOS SIMULADOS PARA FALLBACK ----
+  const temp = 22 + Math.sin(counter / 10) * 12;   // 10-34 °C
+  const hum = 55 + Math.cos(counter / 10) * 25;    // 30-80 %
+  updateUI(temp, hum);
+}
+
+function updateUI(temp, hum) {
   // ---- ATUALIZA UI ----
   tempValue.textContent = temp.toFixed(1) + ' °C';
-  humValue.textContent  = hum.toFixed(1) + ' %';
-  const now = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  humValue.textContent = hum.toFixed(1) + ' %';
+  
+  const now = new Date().toLocaleTimeString('pt-BR', { 
+    hour: '2-digit', 
+    minute: '2-digit', 
+    second: '2-digit' 
+  });
+  
   tempTime.textContent = now;
-  humTime.textContent  = now;
+  humTime.textContent = now;
 
+  // Simulação de ônibus (pode ser expandido futuramente)
+  const buses = Math.random() > 0.6 ? ['Ônibus 101', 'Ônibus 205'] : [];
   busListEl.innerHTML = buses.length
     ? buses.map(b => `<li class="text-green-400">${b}</li>`).join('')
     : '<li class="text-gray-500">—</li>';
 
-  // ---- GRÁFICO ----
-  const label = now.split(' ')[1];   // só HH:MM:SS
+  // ---- ATUALIZA GRÁFICO ----
+  const label = now;
   chart.data.labels.push(label);
   chart.data.datasets[0].data.push(temp);
   chart.data.datasets[1].data.push(hum);
