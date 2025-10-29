@@ -1,0 +1,36 @@
+{
+  "name": "smart-bus-stop-frontend",
+  "version": "1.0.0",
+  "description": "Dashboard web para monitoramento de paradas de ônibus inteligentes",
+  "main": "index.html",
+  "scripts": {
+    "start": "http-server -p 8000 --cors -o",
+    "dev": "http-server -p 8000 --cors",
+    "serve": "http-server -p 8000",
+    "test": "echo \"No tests specified\" && exit 0"
+  },
+  "devDependencies": {
+    "http-server": "^14.1.1"
+  },
+  "keywords": [
+    "iot",
+    "bus-stop",
+    "dashboard",
+    "temperature",
+    "humidity"
+  ],
+  "authors": [
+    "Italo",
+    "Rafaella",
+    "Renan",
+    "Maria Lívia",
+    "Heytor",
+    "Maria Gabriella",
+    "Hadassa"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/heytorpimentell/Frontend--Smart-Bus-Stop.git"
+  }
+}

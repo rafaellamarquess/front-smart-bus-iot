@@ -18,9 +18,15 @@ function logout() {
 /* --------------------------------------------------------------
    CONFIGURAÇÕES
    -------------------------------------------------------------- */
-const BACKEND_URL = "https://back-smart-bus-iot-nyp0.onrender.com";   // URL corrigida (removido o duplo h)
-const pollInterval = 2000;                         // 2 s
+const BACKEND_URL = "https://back-smart-bus-iot-nyp0.onrender.com";   
+const pollInterval = 5000;                         // 5 s (aumentado para reduzir spam)
 const maxPoints = 30;                              // pontos no gráfico
+
+// Adicionar status de conexão na UI
+let connectionStatus = document.createElement('div');
+connectionStatus.id = 'connectionStatus';
+connectionStatus.className = 'fixed top-4 right-4 px-3 py-1 rounded text-sm';
+document.body.appendChild(connectionStatus);
 
 /* --------------------------------------------------------------
    ELEMENTOS DO DOM
@@ -55,9 +61,23 @@ const chart = new Chart(ctx, {
    FUNÇÃO PARA BUSCAR DADOS DO BACKEND
    -------------------------------------------------------------- */
 let counter = 0;
+let lastDataSource = 'unknown';
+
 async function fetchData() {
+  console.log('🔄 Buscando dados...', new Date().toLocaleTimeString());
+  
+  // Primeiro, tenta dados reais do backend
+  if (await tryBackendData()) return;
+  
+  // Se falhar, usa dados simulados
+  console.log('⚠️ Usando dados simulados');
+  useFallbackData();
+}
+
+async function tryBackendData() {
   try {
-    // Tenta buscar dados reais do ThingSpeak via backend
+    updateConnectionStatus('Conectando...', 'bg-yellow-500');
+    
     const response = await fetch(`${BACKEND_URL}/api/sensors/test_thingspeak`, {
       method: 'GET',
       headers: {
@@ -66,35 +86,65 @@ async function fetchData() {
       }
     });
 
+    console.log('📡 Resposta do backend:', response.status, response.statusText);
+
     if (response.ok) {
       const data = await response.json();
+      console.log('📊 Dados recebidos:', data);
       
-      // Usa os dados reais se disponíveis
-      const temp = parseFloat(data.temperature) || (22 + Math.sin(counter / 10) * 12);
-      const hum = parseFloat(data.humidity) || (55 + Math.cos(counter / 10) * 25);
-      
-      updateUI(temp, hum);
+      // Verifica se os dados são válidos
+      if (data && (data.temperature !== undefined || data.humidity !== undefined)) {
+        const temp = parseFloat(data.temperature) || generateFallbackTemp();
+        const hum = parseFloat(data.humidity) || generateFallbackHum();
+        
+        updateConnectionStatus('Conectado', 'bg-green-500');
+        lastDataSource = 'backend';
+        updateUI(temp, hum, 'Backend Real');
+        return true;
+      } else {
+        console.warn('❌ Dados inválidos recebidos do backend:', data);
+      }
     } else {
-      // Fallback para dados simulados se o backend não responder
-      useFallbackData();
+      console.warn('❌ Erro HTTP:', response.status);
+      updateConnectionStatus(`Erro ${response.status}`, 'bg-red-500');
     }
   } catch (error) {
-    console.warn('Erro ao conectar com backend, usando dados simulados:', error);
-    useFallbackData();
+    console.error('❌ Erro de conexão:', error);
+    updateConnectionStatus('Desconectado', 'bg-red-500');
   }
+  
+  return false;
+}
+
+function updateConnectionStatus(text, className) {
+  connectionStatus.textContent = text;
+  connectionStatus.className = `fixed top-4 right-4 px-3 py-1 rounded text-sm text-white ${className}`;
+}
+
+function generateFallbackTemp() {
+  return 22 + Math.sin(counter / 10) * 12;   // 10-34 °C
+}
+
+function generateFallbackHum() {
+  return 55 + Math.cos(counter / 10) * 25;    // 30-80 %
 }
 
 function useFallbackData() {
   // ---- DADOS SIMULADOS PARA FALLBACK ----
-  const temp = 22 + Math.sin(counter / 10) * 12;   // 10-34 °C
-  const hum = 55 + Math.cos(counter / 10) * 25;    // 30-80 %
-  updateUI(temp, hum);
+  const temp = generateFallbackTemp();
+  const hum = generateFallbackHum();
+  
+  updateConnectionStatus('Simulado', 'bg-blue-500');
+  lastDataSource = 'simulated';
+  updateUI(temp, hum, 'Simulado');
 }
 
-function updateUI(temp, hum) {
+function updateUI(temp, hum, source = 'Desconhecido') {
+  console.log(`📱 Atualizando UI - Temp: ${temp.toFixed(1)}°C, Hum: ${hum.toFixed(1)}%, Fonte: ${source}`);
+  
   // ---- ATUALIZA UI ----
-  tempValue.textContent = temp.toFixed(1) + ' °C';
-  humValue.textContent = hum.toFixed(1) + ' %';
+  if (tempValue) tempValue.textContent = temp.toFixed(1) + ' °C';
+  if (humValue) humValue.textContent = hum.toFixed(1) + ' %';
   
   const now = new Date().toLocaleTimeString('pt-BR', { 
     hour: '2-digit', 
@@ -102,17 +152,19 @@ function updateUI(temp, hum) {
     second: '2-digit' 
   });
   
-  tempTime.textContent = now;
-  humTime.textContent = now;
+  if (tempTime) tempTime.textContent = `${now} (${source})`;
+  if (humTime) humTime.textContent = `${now} (${source})`;
 
   // Simulação de ônibus (pode ser expandido futuramente)
   const buses = Math.random() > 0.6 ? ['Ônibus 101', 'Ônibus 205'] : [];
-  busListEl.innerHTML = buses.length
-    ? buses.map(b => `<li class="text-green-400">${b}</li>`).join('')
-    : '<li class="text-gray-500">—</li>';
+  if (busListEl) {
+    busListEl.innerHTML = buses.length
+      ? buses.map(b => `<li class="text-green-400">${b}</li>`).join('')
+      : '<li class="text-gray-500">—</li>';
+  }
 
   // ---- ATUALIZA GRÁFICO ----
-  const label = now;
+  const label = now.substring(0, 8); // Só hora:minuto:segundo
   chart.data.labels.push(label);
   chart.data.datasets[0].data.push(temp);
   chart.data.datasets[1].data.push(hum);
@@ -127,16 +179,57 @@ function updateUI(temp, hum) {
 }
 
 /* --------------------------------------------------------------
-   POLLING
+   POLLING E INICIALIZAÇÃO
    -------------------------------------------------------------- */
 let pollTimer = null;
+
 function startPolling() {
+  console.log('🚀 Iniciando polling de dados...');
   stopPolling();
   pollTimer = setInterval(fetchData, pollInterval);
   fetchData();               // primeira chamada imediata
 }
+
 function stopPolling() {
   if (pollTimer) clearInterval(pollTimer);
   pollTimer = null;
+  console.log('⏹️ Polling parado');
 }
-startPolling();
+
+// Verificar se os elementos DOM existem
+document.addEventListener('DOMContentLoaded', function() {
+  console.log('🏁 DOM carregado, verificando elementos...');
+  
+  // Verificar elementos críticos
+  const elements = {
+    tempValue: document.getElementById('tempValue'),
+    humValue: document.getElementById('humValue'),
+    tempTime: document.getElementById('tempTime'),
+    humTime: document.getElementById('humTime'),
+    busListEl: document.getElementById('busList'),
+    chartCanvas: document.getElementById('lineChart')
+  };
+  
+  console.log('📋 Elementos encontrados:', elements);
+  
+  // Verificar se todos os elementos existem
+  const missingElements = Object.entries(elements)
+    .filter(([key, element]) => !element)
+    .map(([key]) => key);
+  
+  if (missingElements.length > 0) {
+    console.error('❌ Elementos não encontrados:', missingElements);
+    alert(`Erro: Elementos não encontrados no DOM: ${missingElements.join(', ')}`);
+  } else {
+    console.log('✅ Todos os elementos DOM encontrados');
+    startPolling();
+  }
+});
+
+// Fallback: tentar iniciar após um delay se o DOM já estiver carregado
+if (document.readyState === 'loading') {
+  console.log('⏳ DOM ainda carregando...');
+} else {
+  console.log('⚡ DOM já carregado, iniciando imediatamente');
+  setTimeout(startPolling, 1000);
+}

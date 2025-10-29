@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste do Backend - Smart Bus Stop</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-6">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-3xl font-bold mb-6">Teste do Backend - Smart Bus Stop</h1>
+        
+        <!-- Status de Conexão -->
+        <div id="connectionStatus" class="mb-6 p-4 rounded-lg border">
+            <h2 class="text-xl font-semibold mb-2">Status da Conexão</h2>
+            <div id="statusContent">Clique em "Testar Conexão" para verificar</div>
+        </div>
+
+        <!-- Botões de Teste -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <button onclick="testConnection()" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+                Testar Conexão
+            </button>
+            <button onclick="testThingSpeak()" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
+                Testar ThingSpeak
+            </button>
+            <button onclick="testRegister()" class="bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600">
+                Testar Registro
+            </button>
+            <button onclick="testLogin()" class="bg-indigo-500 text-white px-4 py-2 rounded hover:bg-indigo-600">
+                Testar Login
+            </button>
+        </div>
+
+        <!-- Log de Resultados -->
+        <div class="bg-black text-green-400 p-4 rounded-lg font-mono text-sm h-96 overflow-y-auto">
+            <div id="logOutput">Logs aparecerão aqui...</div>
+        </div>
+
+        <!-- Dados em Tempo Real -->
+        <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="bg-white p-4 rounded-lg shadow">
+                <h3 class="font-semibold mb-2">Temperatura</h3>
+                <div id="tempDisplay" class="text-2xl font-bold text-blue-600">-- °C</div>
+            </div>
+            <div class="bg-white p-4 rounded-lg shadow">
+                <h3 class="font-semibold mb-2">Umidade</h3>
+                <div id="humDisplay" class="text-2xl font-bold text-green-600">-- %</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const BACKEND_URL = "https://back-smart-bus-iot-nyp0.onrender.com";
+        const logOutput = document.getElementById('logOutput');
+        const statusContent = document.getElementById('statusContent');
+        const tempDisplay = document.getElementById('tempDisplay');
+        const humDisplay = document.getElementById('humDisplay');
+
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const colors = {
+                info: 'text-green-400',
+                error: 'text-red-400',
+                warning: 'text-yellow-400',
+                success: 'text-blue-400'
+            };
+            
+            const logEntry = document.createElement('div');
+            logEntry.className = colors[type] || 'text-green-400';
+            logEntry.innerHTML = `[${timestamp}] ${message}`;
+            
+            logOutput.appendChild(logEntry);
+            logOutput.scrollTop = logOutput.scrollHeight;
+            
+            console.log(`[${type.toUpperCase()}]`, message);
+        }
+
+        async function testConnection() {
+            log('🔄 Testando conexão básica...', 'info');
+            statusContent.innerHTML = '<span class="text-yellow-600">Testando...</span>';
+            
+            try {
+                const response = await fetch(BACKEND_URL, {
+                    method: 'GET',
+                    mode: 'cors'
+                });
+                
+                log(`✅ Resposta recebida: ${response.status} ${response.statusText}`, 'success');
+                statusContent.innerHTML = `<span class="text-green-600">✅ Conectado (${response.status})</span>`;
+                
+            } catch (error) {
+                log(`❌ Erro de conexão: ${error.message}`, 'error');
+                statusContent.innerHTML = `<span class="text-red-600">❌ Desconectado: ${error.message}</span>`;
+            }
+        }
+
+        async function testThingSpeak() {
+            log('🔄 Testando endpoint ThingSpeak...', 'info');
+            
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/sensors/test_thingspeak`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                log(`📡 Status: ${response.status} ${response.statusText}`, 'info');
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    log(`📊 Dados recebidos: ${JSON.stringify(data, null, 2)}`, 'success');
+                    
+                    // Atualizar displays
+                    if (data.temperature !== undefined) {
+                        tempDisplay.textContent = `${data.temperature} °C`;
+                    }
+                    if (data.humidity !== undefined) {
+                        humDisplay.textContent = `${data.humidity} %`;
+                    }
+                } else {
+                    const errorText = await response.text();
+                    log(`❌ Erro: ${errorText}`, 'error');
+                }
+                
+            } catch (error) {
+                log(`❌ Erro na requisição: ${error.message}`, 'error');
+            }
+        }
+
+        async function testRegister() {
+            log('🔄 Testando registro de usuário...', 'info');
+            
+            const testUser = {
+                email: `test${Date.now()}@example.com`,
+                password: "123456",
+                full_name: "Usuário Teste"
+            };
+            
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/auth/register`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(testUser)
+                });
+                
+                log(`📝 Status registro: ${response.status}`, 'info');
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    log(`✅ Usuário registrado: ${JSON.stringify(data, null, 2)}`, 'success');
+                } else {
+                    const errorData = await response.json();
+                    log(`❌ Erro no registro: ${JSON.stringify(errorData, null, 2)}`, 'error');
+                }
+                
+            } catch (error) {
+                log(`❌ Erro na requisição de registro: ${error.message}`, 'error');
+            }
+        }
+
+        async function testLogin() {
+            log('🔄 Testando login...', 'info');
+            
+            const loginData = {
+                email: "test@example.com",
+                password: "123456"
+            };
+            
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(loginData)
+                });
+                
+                log(`🔐 Status login: ${response.status}`, 'info');
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    log(`✅ Login realizado: Token recebido`, 'success');
+                    localStorage.setItem('token', data.access_token);
+                } else {
+                    const errorData = await response.json();
+                    log(`❌ Erro no login: ${JSON.stringify(errorData, null, 2)}`, 'error');
+                }
+                
+            } catch (error) {
+                log(`❌ Erro na requisição de login: ${error.message}`, 'error');
+            }
+        }
+
+        // Inicialização
+        log('🚀 Página de teste carregada', 'info');
+        log(`🔗 Backend URL: ${BACKEND_URL}`, 'info');
+        
+        // Teste automático de conexão ao carregar
+        setTimeout(testConnection, 1000);
+        
+        // Teste automático do ThingSpeak a cada 10 segundos
+        setInterval(testThingSpeak, 10000);
+    </script>
+</body>
+</html>
