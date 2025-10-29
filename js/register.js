@@ -5,7 +5,8 @@ async function getBestBackendUrl() {
   if (window.selectBestBackendUrl) {
     return await window.selectBestBackendUrl();
   }
-  return window.BACKEND_URL_OVERRIDE || "http://localhost:8001";
+  // Fallback para o Render se config não carregou
+  return "https://back-smart-bus-iot-nyp0.onrender.com";
 }
 
 document.getElementById('registerForm').addEventListener('submit', async function (e) {

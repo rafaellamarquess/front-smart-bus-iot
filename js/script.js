@@ -23,10 +23,11 @@ async function getBestBackendUrl() {
   if (window.selectBestBackendUrl) {
     return await window.selectBestBackendUrl();
   }
-  return window.BACKEND_URL_OVERRIDE || "http://localhost:8001";
+  // Fallback para o Render se config não carregou
+  return "https://back-smart-bus-iot-nyp0.onrender.com";
 }
 
-let BACKEND_URL = window.BACKEND_URL_OVERRIDE || "http://localhost:8001";
+let BACKEND_URL = "https://back-smart-bus-iot-nyp0.onrender.com"; // Inicializar com Render
 const pollInterval = 5000;                         // 5 s (aumentado para reduzir spam)
 const maxPoints = 30;                              // pontos no gráfico
 
