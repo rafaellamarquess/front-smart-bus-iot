@@ -33,6 +33,12 @@ let BACKEND_URL = "https://back-smart-bus-iot-nyp0.onrender.com"; // Inicializar
    CHART.JS - GRÁFICO HISTÓRICO
    -------------------------------------------------------------- */
 const historicalCtx = document.getElementById('historicalChart').getContext('2d');
+// Forçar altura fixa para evitar crescimento infinito
+document.getElementById('historicalChart').style.height = '200px';
+document.getElementById('historicalChart').style.maxHeight = '200px';
+document.getElementById('historicalChart').width = document.getElementById('historicalChart').offsetWidth;
+document.getElementById('historicalChart').height = 200;
+
 const historicalChart = new Chart(historicalCtx, {
   type: 'line',
   data: {
@@ -42,56 +48,67 @@ const historicalChart = new Chart(historicalCtx, {
         label: 'Temperatura (°C)', 
         data: [], 
         borderColor: '#ef4444', 
-        backgroundColor: 'rgba(239, 68, 68, 0.1)',
-        tension: 0.3,
-        fill: true
+        backgroundColor: 'transparent',
+        tension: 0.2,
+        fill: false,
+        pointRadius: 2
       },
       { 
         label: 'Umidade (%)', 
         data: [], 
         borderColor: '#3b82f6', 
-        backgroundColor: 'rgba(59, 130, 246, 0.1)',
-        tension: 0.3,
-        fill: true
-      },
-      { 
-        label: 'Índice de Calor (°C)', 
-        data: [], 
-        borderColor: '#f97316', 
-        backgroundColor: 'rgba(249, 115, 22, 0.1)',
-        tension: 0.3,
-        fill: false
+        backgroundColor: 'transparent',
+        tension: 0.2,
+        fill: false,
+        pointRadius: 2
       }
     ]
   },
   options: {
-    responsive: true,
+    responsive: false, // Desabilitar responsividade para manter tamanho fixo
     maintainAspectRatio: false,
+    animation: false,
     plugins: { 
-      legend: { position: 'top' }
+      legend: { 
+        position: 'top',
+        labels: {
+          boxWidth: 12,
+          padding: 8
+        }
+      }
     },
     layout: {
       padding: {
-        top: 10,
-        bottom: 10
+        top: 5,
+        bottom: 5,
+        left: 5,
+        right: 5
       }
     },
     scales: {
       y: {
         beginAtZero: false,
         grid: {
-          color: 'rgba(156, 163, 175, 0.1)'
+          display: false
         },
         ticks: {
-          color: '#9ca3af'
+          color: '#9ca3af',
+          maxTicksLimit: 4,
+          font: {
+            size: 10
+          }
         }
       },
       x: {
         grid: {
-          color: 'rgba(156, 163, 175, 0.1)'
+          display: false
         },
         ticks: {
-          color: '#9ca3af'
+          color: '#9ca3af',
+          maxTicksLimit: 4,
+          font: {
+            size: 10
+          }
         }
       }
     }
@@ -210,8 +227,8 @@ async function loadHistoricalData() {
   try {
     BACKEND_URL = await getBestBackendUrl();
     console.log('🔗 Analytics Historical Data usando URL:', BACKEND_URL);
-    // Limitar para 20 pontos para evitar travamento
-    const response = await fetch(`${BACKEND_URL}/api/sensors/readings?limit=20`, {
+    // Limitar para apenas 5 pontos para evitar travamento
+    const response = await fetch(`${BACKEND_URL}/api/sensors/readings?limit=5`, {
       headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
     });
     
@@ -374,9 +391,8 @@ function updateHistoricalChart(readings) {
   historicalChart.data.labels = labels;
   historicalChart.data.datasets[0].data = readings.map(r => r.temperature);
   historicalChart.data.datasets[1].data = readings.map(r => r.humidity);
-  historicalChart.data.datasets[2].data = readings.map(r => r.heat_index || 0);
   
-  historicalChart.update();
+  historicalChart.update('none'); // Update sem animação
 }
 
 /* --------------------------------------------------------------
@@ -432,14 +448,14 @@ function showFallbackPipeline() {
 }
 
 function showFallbackHistorical() {
-  // Gerar dados simulados para o gráfico
+  // Gerar apenas 5 pontos simulados para evitar travamento
   const now = new Date();
   const labels = [];
   const tempData = [];
   const humData = [];
   const heatData = [];
   
-  for (let i = 20; i >= 0; i--) {
+  for (let i = 4; i >= 0; i--) {
     const time = new Date(now.getTime() - i * 30 * 60 * 1000); // 30 min intervals
     labels.push(time.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }));
     
@@ -454,9 +470,8 @@ function showFallbackHistorical() {
   historicalChart.data.labels = labels;
   historicalChart.data.datasets[0].data = tempData;
   historicalChart.data.datasets[1].data = humData;
-  historicalChart.data.datasets[2].data = heatData;
   
-  historicalChart.update();
+  historicalChart.update('none'); // Update sem animação
 }
 
 /* --------------------------------------------------------------
@@ -479,22 +494,26 @@ function getTrendSymbol(direction) {
 document.addEventListener('DOMContentLoaded', function() {
   console.log('🚀 Analytics page loaded');
   
-  // Carregar todos os dados
+  // Carregar apenas os dados essenciais inicialmente
   loadDashboard();
-  loadTrends(7);
-  loadDataQuality();
-  loadSummary('24h');
-  loadPipelineStats();
   loadHistoricalData();
   
-  // Configurar polling para atualizações automáticas (aumentar intervalo para 2 minutos)
-  if (!window.analyticsPollingStarted) {
-    window.analyticsPollingStarted = true;
-    setInterval(() => {
-      loadDashboard();
-      loadHistoricalData();
-    }, 60000); // 90 segundos
-  }
+  // Carregar outros dados com delay para evitar sobrecarga
+  setTimeout(() => {
+    loadTrends(7);
+  }, 2000);
+  
+  setTimeout(() => {
+    loadDataQuality();
+  }, 4000);
+  
+  setTimeout(() => {
+    loadSummary('24h');
+    loadPipelineStats();
+  }, 6000);
+  
+  // Desabilitar polling automático para evitar travamentos
+  // (usuário pode atualizar manualmente se necessário)
   
   console.log('📊 Analytics initialized');
 });
