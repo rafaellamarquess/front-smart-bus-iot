@@ -28,7 +28,7 @@ async function getBestBackendUrl() {
 }
 
 let BACKEND_URL = "https://back-smart-bus-iot-nyp0.onrender.com"; // Inicializar com Render
-const pollInterval = 5000;                         // 5 s (aumentado para reduzir spam)
+const pollInterval = 10000;                        // 10 segundos (ThingSpeak sincronizado)
 const maxPoints = 30;                              // pontos no gráfico
 
 // Adicionar status de conexão na UI
@@ -73,37 +73,32 @@ let counter = 0;
 let lastDataSource = 'unknown';
 let currentEndpointIndex = 0;
 
-// Lista de endpoints para tentar em ordem de prioridade
+// Endpoint principal: dados ThingSpeak direto (sem salvar no banco)
 const API_ENDPOINTS = [
   {
-    name: 'Dashboard Completo',
-    url: '/api/analytics/dashboard',
-    parser: 'dashboard'
+    name: 'Dados ThingSpeak Direto',
+    url: '/api/thingspeak/thingspeak?results=3',
+    parser: 'thingspeak_direct'
   },
   {
-    name: 'Leituras dos Sensores',
-    url: '/api/sensors/readings?limit=1',
+    name: 'Leituras dos Sensores (Fallback)',
+    url: '/api/sensors/readings?limit=8',
     parser: 'readings'
   },
   {
-    name: 'Resumo Analytics',
-    url: '/api/analytics/summary?timeframe=1h',
-    parser: 'summary'
-  },
-  {
-    name: 'Teste ThingSpeak',
-    url: '/api/sensors/test_thingspeak',
-    parser: 'thingspeak'
+    name: 'Dashboard Analytics (Fallback)',
+    url: '/api/analytics/dashboard',
+    parser: 'dashboard'
   }
 ];
 
 async function fetchData() {
-  console.log('🔄 Buscando dados...', new Date().toLocaleTimeString());
+  console.log('Buscando dados...', new Date().toLocaleTimeString());
   
   // Tenta endpoints em sequência até encontrar dados válidos
   for (let i = 0; i < API_ENDPOINTS.length; i++) {
     const endpoint = API_ENDPOINTS[i];
-    console.log(`📡 Tentando: ${endpoint.name}`);
+    console.log(`Tentando: ${endpoint.name}`);
     
     if (await tryEndpoint(endpoint)) {
       currentEndpointIndex = i;
@@ -111,9 +106,9 @@ async function fetchData() {
     }
   }
   
-  // Se todos falharem, usa dados simulados
-  console.log('⚠️ Todos os endpoints falharam, usando dados simulados');
-  useFallbackData();
+  // Se todos falharem, exibe erro e não atualiza UI
+  console.log('Nenhum dado real disponível');
+  updateConnectionStatus('Sem dados do backend', 'bg-red-500');
 }
 
 async function tryEndpoint(endpoint) {
@@ -174,7 +169,6 @@ function parseEndpointData(data, parserType) {
         };
       }
       break;
-      
     case 'readings':
       if (data.readings && data.readings.length > 0) {
         const reading = data.readings[0];
@@ -188,7 +182,6 @@ function parseEndpointData(data, parserType) {
         };
       }
       break;
-      
     case 'summary':
       if (data.temperature && data.humidity) {
         temp = data.temperature.average;
@@ -202,24 +195,36 @@ function parseEndpointData(data, parserType) {
         };
       }
       break;
-      
+    case 'thingspeak_direct':
+      // Dados diretos do ThingSpeak via /api/thingspeak
+      if (Array.isArray(data.sample_data) && data.sample_data.length > 0) {
+        // Exibe todos os dados recebidos do ThingSpeak
+        extra.allSamples = data.sample_data;
+        // Atualiza painel principal com o último valor
+        const last = data.sample_data[data.sample_data.length - 1];
+        temp = last.temperature;
+        hum = last.humidity;
+        extra.source = 'ThingSpeak Direto';
+        extra.deviceId = last.device_id;
+        extra.entryId = last.entry_id;
+        extra.createdAt = last.thingspeak_created_at;
+      }
+      break;
     case 'thingspeak':
-      // Fallback - ThingSpeak pode não retornar dados estruturados
-      temp = data.temperature || generateFallbackTemp();
-      hum = data.humidity || generateFallbackHum();
+      // ThingSpeak teste (fallback)
+      temp = data.temperature;
+      hum = data.humidity;
       extra = { source: 'ThingSpeak Test' };
       break;
   }
-  
-  // Valida se encontrou pelo menos temperatura ou umidade
+  // Só retorna se encontrou dados reais
   if (temp !== null || hum !== null) {
     return {
-      temp: temp || generateFallbackTemp(),
-      hum: hum || generateFallbackHum(),
+      temp: temp,
+      hum: hum,
       extra: extra
     };
   }
-  
   return null;
 }
 
@@ -228,53 +233,62 @@ function updateConnectionStatus(text, className) {
   connectionStatus.className = `fixed top-4 right-4 px-3 py-1 rounded text-sm text-white ${className}`;
 }
 
-function generateFallbackTemp() {
-  return 22 + Math.sin(counter / 10) * 12;   // 10-34 °C
-}
-
-function generateFallbackHum() {
-  return 55 + Math.cos(counter / 10) * 25;    // 30-80 %
-}
-
-function useFallbackData() {
-  // ---- DADOS SIMULADOS PARA FALLBACK ----
-  const temp = generateFallbackTemp();
-  const hum = generateFallbackHum();
-  const heatIndex = temp + 2 + Math.random() * 3; // Simular índice de calor
+// Função para calcular índice de calor (Heat Index)
+function calculateHeatIndex(tempC, humidity) {
+  // Converter para Fahrenheit para usar fórmula padrão
+  const tempF = (tempC * 9/5) + 32;
+  const T = tempF;
+  const RH = humidity;
   
-  updateConnectionStatus('Simulado', 'bg-blue-500');
-  lastDataSource = 'simulated';
-  updateUI(temp, hum, 'Simulado', {
-    heatIndex: heatIndex,
-    dataQuality: 85 + Math.random() * 10 // 85-95%
-  });
+  // Fórmula simplificada do National Weather Service
+  if (T < 80) {
+    return tempC; // Se temperatura baixa, heat index = temperatura
+  }
+  
+  const HI = -42.379 + 2.04901523*T + 10.14333127*RH - 0.22475541*T*RH 
+           - 6.83783e-3*T*T - 5.481717e-2*RH*RH + 1.22874e-3*T*T*RH 
+           + 8.5282e-4*T*RH*RH - 1.99e-6*T*T*RH*RH;
+  
+  // Converter de volta para Celsius
+  return (HI - 32) * 5/9;
 }
 
 function updateUI(temp, hum, source = 'Desconhecido', extra = {}) {
-  console.log(`📱 Atualizando UI - Temp: ${temp.toFixed(1)}°C, Hum: ${hum.toFixed(1)}%, Fonte: ${source}`);
-  
-  // ---- ATUALIZA VALORES PRINCIPAIS ----
-  if (tempValue) tempValue.textContent = temp.toFixed(1) + ' °C';
-  if (humValue) humValue.textContent = hum.toFixed(1) + ' %';
-  
-  const now = new Date().toLocaleTimeString('pt-BR', { 
-    hour: '2-digit', 
-    minute: '2-digit', 
-    second: '2-digit' 
-  });
-  
-  if (tempTime) tempTime.textContent = `${now} (${source})`;
-  if (humTime) humTime.textContent = `${now} (${source})`;
+  // Se vier dados de sample_data, atualiza o gráfico com todos
+  if (extra.allSamples && Array.isArray(extra.allSamples) && extra.allSamples.length > 0) {
+    chart.data.labels = extra.allSamples.map(item => {
+      return new Date(item.thingspeak_created_at).toLocaleTimeString('pt-BR', {
+        hour: '2-digit', minute: '2-digit', second: '2-digit'
+      });
+    });
+    chart.data.datasets[0].data = extra.allSamples.map(item => item.temperature);
+    chart.data.datasets[1].data = extra.allSamples.map(item => item.humidity);
+    chart.update('quiet');
 
-  // ---- ATUALIZA MÉTRICAS EXTRAS ----
-  updateExtraMetrics(extra);
+    // Atualiza painel principal com o último valor
+    const last = extra.allSamples[extra.allSamples.length - 1];
+    if (tempValue) tempValue.textContent = last.temperature.toFixed(1) + ' °C';
+    if (humValue) humValue.textContent = last.humidity.toFixed(1) + ' %';
+    if (tempTime) tempTime.textContent = `${new Date(last.thingspeak_created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })} (ThingSpeak)`;
+    if (humTime) humTime.textContent = `${new Date(last.thingspeak_created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })} (ThingSpeak)`;
 
-  // ---- SIMULAÇÃO DE ÔNIBUS (futura integração com API de transporte) ----
-  const buses = Math.random() > 0.6 ? ['Ônibus 101', 'Ônibus 205'] : [];
+    // Atualiza métricas extras
+    extra.temp = last.temperature;
+    extra.hum = last.humidity;
+    updateExtraMetrics(extra);
+    return;
+  }
+
+  // ...código antigo para fallback e outros endpoints...
+  // if (busListEl) {
+  //   busListEl.innerHTML = buses.length
+  //     ? buses.map(b => `<li class="text-green-400">${b}</li>`).join('')
+  //     : '<li class="text-gray-500">—</li>';
+  // }
+  
+  // Aguardando dados reais de ônibus do backend
   if (busListEl) {
-    busListEl.innerHTML = buses.length
-      ? buses.map(b => `<li class="text-green-400">${b}</li>`).join('')
-      : '<li class="text-gray-500">—</li>';
+    busListEl.innerHTML = '<li class="text-gray-500">Aguardando dados...</li>';
   }
 
   // ---- ATUALIZA GRÁFICO ----
@@ -294,8 +308,15 @@ function updateUI(temp, hum, source = 'Desconhecido', extra = {}) {
 
 function updateExtraMetrics(extra) {
   // Atualiza elementos extras se existirem
-  if (extra.heatIndex && document.getElementById('heatIndexValue')) {
-    document.getElementById('heatIndexValue').textContent = extra.heatIndex.toFixed(1) + ' °C';
+  if (document.getElementById('heatIndexValue')) {
+    // Usar heatIndex do backend se disponível, senão calcular localmente
+    let heatIndex = extra.heatIndex;
+    if (!heatIndex && extra.temp && extra.hum) {
+      heatIndex = calculateHeatIndex(extra.temp, extra.hum);
+    }
+    if (heatIndex) {
+      document.getElementById('heatIndexValue').textContent = heatIndex.toFixed(1) + ' °C';
+    }
   }
   
   if (extra.dataQuality && document.getElementById('dataQualityValue')) {
@@ -370,8 +391,8 @@ function startPolling() {
 function startDetailedPolling() {
   console.log('📈 Iniciando polling de analytics...');
   stopDetailedPolling();
-  detailedPollTimer = setInterval(fetchDetailedAnalytics, 30000); // 30 segundos
-  setTimeout(fetchDetailedAnalytics, 5000); // primeira chamada após 5s
+  detailedPollTimer = setInterval(fetchDetailedAnalytics, 60000); // 60 segundos (menos frequente)
+  setTimeout(fetchDetailedAnalytics, 25000); // primeira chamada após 25s
 }
 
 function stopPolling() {
