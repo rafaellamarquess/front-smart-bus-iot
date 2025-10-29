@@ -76,17 +76,17 @@ let currentEndpointIndex = 0;
 // Endpoint principal: dados ThingSpeak direto (sem salvar no banco)
 const API_ENDPOINTS = [
   {
-    name: 'Dados ThingSpeak Direto',
-    url: '/api/thingspeak/thingspeak?results=3',
+    name: 'Dados ThingSpeak',
+    url: '/api/thingspeak/thingspeak?results=10',
     parser: 'thingspeak_direct'
   },
   {
-    name: 'Leituras dos Sensores (Fallback)',
+    name: 'Leituras dos Sensores', //fallback
     url: '/api/sensors/readings?limit=8',
     parser: 'readings'
   },
   {
-    name: 'Dashboard Analytics (Fallback)',
+    name: 'Dashboard Analytics', //fallback
     url: '/api/analytics/dashboard',
     parser: 'dashboard'
   }
@@ -108,7 +108,7 @@ async function fetchData() {
   
   // Se todos falharem, exibe erro e não atualiza UI
   console.log('Nenhum dado real disponível');
-  updateConnectionStatus('Sem dados do backend', 'bg-red-500');
+  updateConnectionStatus('Falha na conexão ou sem dados disponíveis', 'bg-red-500');
 }
 
 async function tryEndpoint(endpoint) {
@@ -138,14 +138,14 @@ async function tryEndpoint(endpoint) {
         updateUI(parsedData.temp, parsedData.hum, endpoint.name, parsedData.extra);
         return true;
       } else {
-        console.warn(`❌ ${endpoint.name} - Dados inválidos:`, data);
+        console.warn(` ${endpoint.name} - Dados inválidos:`, data);
       }
     } else {
-      console.warn(`❌ ${endpoint.name} - Erro HTTP:`, response.status);
+      console.warn(` ${endpoint.name} - Erro HTTP:`, response.status);
       updateConnectionStatus(`Erro ${response.status}`, 'bg-red-500');
     }
   } catch (error) {
-    console.error(`❌ ${endpoint.name} - Erro de conexão:`, error);
+    console.error(` ${endpoint.name} - Erro de conexão:`, error);
     updateConnectionStatus('Desconectado', 'bg-red-500');
   }
   

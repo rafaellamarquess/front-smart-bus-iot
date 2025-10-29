@@ -450,8 +450,7 @@ function showFallbackDataQuality() {
       total_outliers: 23
     },
     recommendations: [
-      "Data quality is good. Continue monitoring for optimal performance."
-    ]
+      "Verifique os sensores para garantir leituras precisas.",]
   };
   
   updateDataQualityDisplay(fallbackData);

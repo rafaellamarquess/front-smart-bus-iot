@@ -37,7 +37,7 @@
 
     <!-- RESUMO EXECUTIVO -->
     <section class="bg-[#0b1220] border border-gray-700 rounded-xl shadow-lg p-6">
-      <h2 class="text-lg font-semibold mb-4">📊 Resumo Executivo</h2>
+  <h2 class="text-lg font-semibold mb-4">Resumo Executivo 📊</h2>
       <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div class="text-center">
           <div class="text-2xl font-bold text-blue-400" id="totalReadings">--</div>
@@ -58,35 +58,11 @@
       </div>
     </section>
 
-    <!-- TENDÊNCIAS -->
-    <section class="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <!-- ANÁLISE DE TENDÊNCIAS -->
-      <div class="bg-[#0b1220] border border-gray-700 rounded-xl shadow-lg p-6">
-        <h3 class="text-lg font-semibold mb-4">📈 Análise de Tendências</h3>
-        <div id="trendsAnalysis" class="space-y-4">
-          <div class="text-gray-400">Carregando análise...</div>
-        </div>
-        
-        <!-- Controles de período -->
-        <div class="mt-4 flex gap-2">
-          <button onclick="loadTrends(1)" class="px-3 py-1 bg-blue-600 rounded text-xs hover:bg-blue-700">1 dia</button>
-          <button onclick="loadTrends(7)" class="px-3 py-1 bg-blue-600 rounded text-xs hover:bg-blue-700">7 dias</button>
-          <button onclick="loadTrends(30)" class="px-3 py-1 bg-blue-600 rounded text-xs hover:bg-blue-700">30 dias</button>
-        </div>
-      </div>
-
-      <!-- QUALIDADE DOS DADOS -->
-      <div class="bg-[#0b1220] border border-gray-700 rounded-xl shadow-lg p-6">
-        <h3 class="text-lg font-semibold mb-4">🎯 Qualidade dos Dados</h3>
-        <div id="dataQualityDetails" class="space-y-4">
-          <div class="text-gray-400">Carregando relatório...</div>
-        </div>
-      </div>
-    </section>
+  <!-- TENDÊNCIAS E QUALIDADE REMOVIDOS/SIMPLIFICADOS -->
 
     <!-- MÉTRICAS POR PERÍODO -->
     <section class="bg-[#0b1220] border border-gray-700 rounded-xl shadow-lg p-6">
-      <h3 class="text-lg font-semibold mb-4">📊 Métricas por Período</h3>
+  <h3 class="text-lg font-semibold mb-4">Métricas por Período 📊</h3>
       
       <!-- Controles de período -->
       <div class="mb-4 flex gap-2">
@@ -100,7 +76,7 @@
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         <!-- TEMPERATURA -->
         <div class="text-center">
-          <h4 class="text-md font-semibold text-red-400 mb-2">🌡️ Temperatura</h4>
+      <h4 class="text-md font-semibold text-red-400 mb-2">Temperatura 🌡️</h4>
           <div class="space-y-2">
             <div>
               <div class="text-lg font-bold" id="tempAvg">-- °C</div>
@@ -121,7 +97,7 @@
 
         <!-- UMIDADE -->
         <div class="text-center">
-          <h4 class="text-md font-semibold text-blue-400 mb-2">💧 Umidade</h4>
+      <h4 class="text-md font-semibold text-blue-400 mb-2">Umidade 💧</h4>
           <div class="space-y-2">
             <div>
               <div class="text-lg font-bold" id="humAvg">-- %</div>
@@ -142,7 +118,7 @@
 
         <!-- ÍNDICE DE CALOR -->
         <div class="text-center">
-          <h4 class="text-md font-semibold text-orange-400 mb-2">🔥 Índice de Calor</h4>
+      <h4 class="text-md font-semibold text-orange-400 mb-2">Índice de Calor 🔥</h4>
           <div class="space-y-2">
             <div>
               <div class="text-lg font-bold" id="heatIndexAvg">-- °C</div>
@@ -156,7 +132,7 @@
 
     <!-- GRÁFICO HISTÓRICO -->
     <section class="bg-[#0b1220] border border-gray-700 rounded-xl shadow-lg p-6">
-      <h3 class="text-lg font-semibold mb-4">📈 Histórico Detalhado</h3>
+  <h3 class="text-lg font-semibold mb-4">Histórico Detalhado 📈</h3>
       <div style="position: relative; height: 200px; width: 100%; overflow: hidden;">
         <canvas id="historicalChart" style="height: 200px !important; max-height: 200px !important; width: 100% !important; max-width: 100% !important;"></canvas>
       </div>
@@ -164,7 +140,7 @@
 
     <!-- PIPELINE STATS -->
     <section class="bg-[#0b1220] border border-gray-700 rounded-xl shadow-lg p-6">
-      <h3 class="text-lg font-semibold mb-4">⚙️ Estatísticas do Pipeline ETL</h3>
+  <h3 class="text-lg font-semibold mb-4">Estatísticas do Pipeline ETL ⚙️</h3>
       <div id="pipelineStats" class="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div class="text-center">
           <div class="text-lg font-bold text-green-400" id="processedCount">--</div>
@@ -183,6 +159,7 @@
           <div class="text-xs text-gray-400">Taxa de Sucesso</div>
         </div>
       </div>
+      <div class="text-center text-gray-500 text-sm mt-4" id="pipelineStatsEmpty">Nenhum dado disponível do pipeline ETL.</div>
     </section>
 
     <!-- RODAPÉ -->
