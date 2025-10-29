@@ -1,6 +1,12 @@
 // js/register.js
 
-const BACKEND_URL = "https://back-smart-bus-iot-nyp0.onrender.com";
+// Função para obter a melhor URL disponível
+async function getBestBackendUrl() {
+  if (window.selectBestBackendUrl) {
+    return await window.selectBestBackendUrl();
+  }
+  return window.BACKEND_URL_OVERRIDE || "http://localhost:8001";
+}
 
 document.getElementById('registerForm').addEventListener('submit', async function (e) {
   e.preventDefault();
@@ -31,6 +37,10 @@ document.getElementById('registerForm').addEventListener('submit', async functio
   }
 
   try {
+    // Seleciona a melhor URL disponível
+    const BACKEND_URL = await getBestBackendUrl();
+    console.log('🔗 Register tentando URL:', BACKEND_URL);
+    
     // Faz requisição real para o backend
     const response = await fetch(`${BACKEND_URL}/api/auth/register`, {
       method: 'POST',

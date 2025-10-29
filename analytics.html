@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Analytics - Smart Bus Stop</title>
+  <!-- ÍCONE -->
+  <link rel="icon" href="img/logo.png">
+  <!-- TAILWIND -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- CHART.JS -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- CONFIG -->
+  <script src="./js/config.js"></script>
+</head>
+<body class="bg-gradient-to-b from-[#071033] to-[#07111f] text-gray-100 min-h-screen flex flex-col">
+
+  <div class="container mx-auto p-6 flex flex-col gap-6">
+
+    <!-- HEADER -->
+    <header class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <div class="flex items-center gap-3">
+        <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-green-500 to-blue-500 flex items-center justify-center overflow-hidden">
+          <img src="img/logo.png" alt="Smart Bus Stop" class="w-full h-full object-cover">
+        </div>
+        <div>
+          <h1 class="text-xl font-semibold">Smart Bus Stop - Analytics</h1>
+          <p class="text-gray-400 text-sm">Análises detalhadas • Tendências • Qualidade dos dados</p>
+        </div>
+      </div>
+
+      <div class="flex gap-2">
+        <a href="index.html" class="text-sm text-blue-400 hover:underline">← Dashboard</a>
+        <button onclick="logout()" class="text-sm text-red-400 hover:underline">Sair</button>
+      </div>
+    </header>
+
+    <!-- RESUMO EXECUTIVO -->
+    <section class="bg-[#0b1220] border border-gray-700 rounded-xl shadow-lg p-6">
+      <h2 class="text-lg font-semibold mb-4">📊 Resumo Executivo</h2>
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="text-center">
+          <div class="text-2xl font-bold text-blue-400" id="totalReadings">--</div>
+          <div class="text-xs text-gray-400">Total de Leituras</div>
+        </div>
+        <div class="text-center">
+          <div class="text-2xl font-bold text-green-400" id="avgQuality">--%</div>
+          <div class="text-xs text-gray-400">Qualidade Média</div>
+        </div>
+        <div class="text-center">
+          <div class="text-2xl font-bold text-yellow-400" id="totalOutliers">--</div>
+          <div class="text-xs text-gray-400">Outliers Detectados</div>
+        </div>
+        <div class="text-center">
+          <div class="text-2xl font-bold text-purple-400" id="dataFreshness">--</div>
+          <div class="text-xs text-gray-400">Atualização dos Dados</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TENDÊNCIAS -->
+    <section class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <!-- ANÁLISE DE TENDÊNCIAS -->
+      <div class="bg-[#0b1220] border border-gray-700 rounded-xl shadow-lg p-6">
+        <h3 class="text-lg font-semibold mb-4">📈 Análise de Tendências</h3>
+        <div id="trendsAnalysis" class="space-y-4">
+          <div class="text-gray-400">Carregando análise...</div>
+        </div>
+        
+        <!-- Controles de período -->
+        <div class="mt-4 flex gap-2">
+          <button onclick="loadTrends(1)" class="px-3 py-1 bg-blue-600 rounded text-xs hover:bg-blue-700">1 dia</button>
+          <button onclick="loadTrends(7)" class="px-3 py-1 bg-blue-600 rounded text-xs hover:bg-blue-700">7 dias</button>
+          <button onclick="loadTrends(30)" class="px-3 py-1 bg-blue-600 rounded text-xs hover:bg-blue-700">30 dias</button>
+        </div>
+      </div>
+
+      <!-- QUALIDADE DOS DADOS -->
+      <div class="bg-[#0b1220] border border-gray-700 rounded-xl shadow-lg p-6">
+        <h3 class="text-lg font-semibold mb-4">🎯 Qualidade dos Dados</h3>
+        <div id="dataQualityDetails" class="space-y-4">
+          <div class="text-gray-400">Carregando relatório...</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- MÉTRICAS POR PERÍODO -->
+    <section class="bg-[#0b1220] border border-gray-700 rounded-xl shadow-lg p-6">
+      <h3 class="text-lg font-semibold mb-4">📊 Métricas por Período</h3>
+      
+      <!-- Controles de período -->
+      <div class="mb-4 flex gap-2">
+        <button onclick="loadSummary('1h')" class="px-3 py-2 bg-gray-700 rounded text-sm hover:bg-gray-600">1 hora</button>
+        <button onclick="loadSummary('6h')" class="px-3 py-2 bg-gray-700 rounded text-sm hover:bg-gray-600">6 horas</button>
+        <button onclick="loadSummary('24h')" class="px-3 py-2 bg-blue-600 rounded text-sm hover:bg-blue-700">24 horas</button>
+        <button onclick="loadSummary('7d')" class="px-3 py-2 bg-gray-700 rounded text-sm hover:bg-gray-600">7 dias</button>
+        <button onclick="loadSummary('30d')" class="px-3 py-2 bg-gray-700 rounded text-sm hover:bg-gray-600">30 dias</button>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- TEMPERATURA -->
+        <div class="text-center">
+          <h4 class="text-md font-semibold text-red-400 mb-2">🌡️ Temperatura</h4>
+          <div class="space-y-2">
+            <div>
+              <div class="text-lg font-bold" id="tempAvg">-- °C</div>
+              <div class="text-xs text-gray-400">Média</div>
+            </div>
+            <div class="flex justify-between text-sm">
+              <div>
+                <div class="font-semibold text-blue-400" id="tempMin">--°C</div>
+                <div class="text-xs text-gray-400">Mín</div>
+              </div>
+              <div>
+                <div class="font-semibold text-red-400" id="tempMax">--°C</div>
+                <div class="text-xs text-gray-400">Máx</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- UMIDADE -->
+        <div class="text-center">
+          <h4 class="text-md font-semibold text-blue-400 mb-2">💧 Umidade</h4>
+          <div class="space-y-2">
+            <div>
+              <div class="text-lg font-bold" id="humAvg">-- %</div>
+              <div class="text-xs text-gray-400">Média</div>
+            </div>
+            <div class="flex justify-between text-sm">
+              <div>
+                <div class="font-semibold text-blue-400" id="humMin">--%</div>
+                <div class="text-xs text-gray-400">Mín</div>
+              </div>
+              <div>
+                <div class="font-semibold text-red-400" id="humMax">--%</div>
+                <div class="text-xs text-gray-400">Máx</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ÍNDICE DE CALOR -->
+        <div class="text-center">
+          <h4 class="text-md font-semibold text-orange-400 mb-2">🔥 Índice de Calor</h4>
+          <div class="space-y-2">
+            <div>
+              <div class="text-lg font-bold" id="heatIndexAvg">-- °C</div>
+              <div class="text-xs text-gray-400">Média</div>
+            </div>
+            <div class="text-xs text-gray-400" id="currentTimeframe">24 horas</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- GRÁFICO HISTÓRICO -->
+    <section class="bg-[#0b1220] border border-gray-700 rounded-xl shadow-lg p-6">
+      <h3 class="text-lg font-semibold mb-4">📈 Histórico Detalhado</h3>
+      <canvas id="historicalChart" class="w-full h-64"></canvas>
+    </section>
+
+    <!-- PIPELINE STATS -->
+    <section class="bg-[#0b1220] border border-gray-700 rounded-xl shadow-lg p-6">
+      <h3 class="text-lg font-semibold mb-4">⚙️ Estatísticas do Pipeline ETL</h3>
+      <div id="pipelineStats" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="text-center">
+          <div class="text-lg font-bold text-green-400" id="processedCount">--</div>
+          <div class="text-xs text-gray-400">Processados</div>
+        </div>
+        <div class="text-center">
+          <div class="text-lg font-bold text-blue-400" id="validCount">--</div>
+          <div class="text-xs text-gray-400">Válidos</div>
+        </div>
+        <div class="text-center">
+          <div class="text-lg font-bold text-red-400" id="invalidCount">--</div>
+          <div class="text-xs text-gray-400">Inválidos</div>
+        </div>
+        <div class="text-center">
+          <div class="text-lg font-bold text-purple-400" id="successRate">--%</div>
+          <div class="text-xs text-gray-400">Taxa de Sucesso</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- RODAPÉ -->
+    <footer class="text-gray-400 text-xs mt-6 text-center">
+      @2025 by Italo, Rafaella, Renan, Maria Lívia, Heytor, Maria Gabriella e Hadassa
+    </footer>
+
+  </div>
+
+  <script src="./js/analytics.js"></script>
+</body>
+</html>

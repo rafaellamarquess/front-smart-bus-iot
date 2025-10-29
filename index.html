@@ -10,6 +10,8 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- CHART.JS -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- CONFIG -->
+  <script src="./js/config.js"></script>
 </head>
 <body class="bg-gradient-to-b from-[#071033] to-[#07111f] text-gray-100 min-h-screen flex flex-col">
 
@@ -27,29 +29,78 @@
         </div>
       </div>
 
-      <!-- BOTÃO SAIR (opcional) -->
-      <button onclick="logout()" class="text-sm text-red-400 hover:underline">Sair</button>
+      <!-- NAVEGAÇÃO -->
+      <div class="flex gap-3 items-center">
+        <a href="analytics.html" class="text-sm text-blue-400 hover:underline">📊 Analytics</a>
+        <button onclick="logout()" class="text-sm text-red-400 hover:underline">Sair</button>
+      </div>
     </header>
 
-    <!-- CARDS -->
-    <section class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <!-- CARDS PRINCIPAIS -->
+    <section class="grid grid-cols-1 md:grid-cols-4 gap-4">
       <!-- TEMPERATURA -->
       <div class="bg-[#0b1220] border border-gray-700 rounded-xl shadow-lg p-5 flex flex-col">
-        <h3 class="text-sm text-gray-400">Temperatura</h3>
+        <h3 class="text-sm text-gray-400 flex items-center gap-2">
+          🌡️ Temperatura
+        </h3>
         <div class="text-2xl font-bold mt-2" id="tempValue">-- °C</div>
         <div class="text-xs text-gray-400 mt-1">Última leitura: <span id="tempTime">—</span></div>
       </div>
 
       <!-- UMIDADE -->
       <div class="bg-[#0b1220] border border-gray-700 rounded-xl shadow-lg p-5 flex flex-col">
-        <h3 class="text-sm text-gray-400">Umidade</h3>
+        <h3 class="text-sm text-gray-400 flex items-center gap-2">
+          💧 Umidade
+        </h3>
         <div class="text-2xl font-bold mt-2" id="humValue">-- %</div>
         <div class="text-xs text-gray-400 mt-1">Última leitura: <span id="humTime">—</span></div>
       </div>
 
+      <!-- ÍNDICE DE CALOR -->
+      <div class="bg-[#0b1220] border border-gray-700 rounded-xl shadow-lg p-5 flex flex-col">
+        <h3 class="text-sm text-gray-400 flex items-center gap-2">
+          🔥 Índice de Calor
+        </h3>
+        <div class="text-2xl font-bold mt-2" id="heatIndexValue">-- °C</div>
+        <div class="text-xs text-gray-400 mt-1">Sensação térmica calculada</div>
+      </div>
+
+      <!-- QUALIDADE DOS DADOS -->
+      <div class="bg-[#0b1220] border border-gray-700 rounded-xl shadow-lg p-5 flex flex-col">
+        <h3 class="text-sm text-gray-400 flex items-center gap-2">
+          📊 Qualidade
+        </h3>
+        <div class="text-2xl font-bold mt-2" id="dataQualityValue">-- %</div>
+        <div class="text-xs text-gray-400 mt-1">Precisão dos sensores</div>
+      </div>
+    </section>
+
+    <!-- CARDS SECUNDÁRIOS -->
+    <section class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+      <!-- TENDÊNCIAS -->
+      <div class="bg-[#0b1220] border border-gray-700 rounded-xl shadow-lg p-5 flex flex-col">
+        <h3 class="text-sm text-gray-400 flex items-center gap-2">
+          📈 Tendências
+        </h3>
+        <div id="trendsInfo" class="mt-2 space-y-1">
+          <div class="text-xs text-gray-400">Carregando...</div>
+        </div>
+      </div>
+
+      <!-- ALERTAS -->
+      <div class="bg-[#0b1220] border border-gray-700 rounded-xl shadow-lg p-5 flex flex-col">
+        <h3 class="text-sm text-gray-400 flex items-center gap-2">
+          🚨 Status
+        </h3>
+        <div class="text-lg font-bold mt-2" id="alertsInfo">—</div>
+        <div class="text-xs text-gray-400 mt-1">Monitoramento em tempo real</div>
+      </div>
+
       <!-- ÔNIBUS -->
       <div class="bg-[#0b1220] border border-gray-700 rounded-xl shadow-lg p-5 flex flex-col">
-        <h3 class="text-sm text-gray-400">Ônibus na parada</h3>
+        <h3 class="text-sm text-gray-400 flex items-center gap-2">
+          🚌 Ônibus na parada
+        </h3>
         <ul id="busList" class="list-disc list-inside text-sm mt-2 text-gray-200">
           <li>—</li>
         </ul>

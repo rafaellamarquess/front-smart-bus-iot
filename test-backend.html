@@ -16,7 +16,7 @@
             <div id="statusContent">Clique em "Testar Conexão" para verificar</div>
         </div>
 
-        <!-- Botões de Teste -->
+        <!-- Botões de Teste Básico -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             <button onclick="testConnection()" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
                 Testar Conexão
@@ -29,6 +29,26 @@
             </button>
             <button onclick="testLogin()" class="bg-indigo-500 text-white px-4 py-2 rounded hover:bg-indigo-600">
                 Testar Login
+            </button>
+        </div>
+
+        <!-- Botões de Teste Analytics -->
+        <h3 class="text-lg font-semibold mb-4">🔬 Testes de Analytics</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3 mb-6">
+            <button onclick="testDashboard()" class="bg-emerald-500 text-white px-3 py-2 rounded text-sm hover:bg-emerald-600">
+                Dashboard
+            </button>
+            <button onclick="testReadings()" class="bg-cyan-500 text-white px-3 py-2 rounded text-sm hover:bg-cyan-600">
+                Readings
+            </button>
+            <button onclick="testSummary()" class="bg-orange-500 text-white px-3 py-2 rounded text-sm hover:bg-orange-600">
+                Summary
+            </button>
+            <button onclick="testTrends()" class="bg-pink-500 text-white px-3 py-2 rounded text-sm hover:bg-pink-600">
+                Trends
+            </button>
+            <button onclick="testDataQuality()" class="bg-yellow-500 text-white px-3 py-2 rounded text-sm hover:bg-yellow-600">
+                Data Quality
             </button>
         </div>
 
@@ -199,11 +219,153 @@
         log('🚀 Página de teste carregada', 'info');
         log(`🔗 Backend URL: ${BACKEND_URL}`, 'info');
         
+        // Novos testes para endpoints de analytics
+        async function testDashboard() {
+            log('🔄 Testando endpoint /api/analytics/dashboard...', 'info');
+            
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/analytics/dashboard`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token') || 'fake-token'}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                log(`📊 Dashboard Status: ${response.status}`, response.ok ? 'success' : 'error');
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    log(`✅ Dashboard data: ${JSON.stringify(data, null, 2)}`, 'success');
+                } else {
+                    const errorText = await response.text();
+                    log(`❌ Dashboard Error: ${errorText}`, 'error');
+                }
+                
+            } catch (error) {
+                log(`❌ Dashboard Request Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testReadings() {
+            log('🔄 Testando endpoint /api/sensors/readings...', 'info');
+            
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/sensors/readings?limit=5`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token') || 'fake-token'}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                log(`📈 Readings Status: ${response.status}`, response.ok ? 'success' : 'error');
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    log(`✅ Readings: ${data.readings?.length || 0} leituras encontradas`, 'success');
+                    
+                    if (data.readings && data.readings.length > 0) {
+                        const latest = data.readings[0];
+                        tempDisplay.textContent = `${latest.temperature || '--'} °C`;
+                        humDisplay.textContent = `${latest.humidity || '--'} %`;
+                    }
+                } else {
+                    const errorText = await response.text();
+                    log(`❌ Readings Error: ${errorText}`, 'error');
+                }
+                
+            } catch (error) {
+                log(`❌ Readings Request Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testSummary() {
+            log('🔄 Testando endpoint /api/analytics/summary...', 'info');
+            
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/analytics/summary?timeframe=24h`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token') || 'fake-token'}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                log(`📊 Summary Status: ${response.status}`, response.ok ? 'success' : 'error');
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    log(`✅ Summary data: ${JSON.stringify(data, null, 2)}`, 'success');
+                } else {
+                    const errorText = await response.text();
+                    log(`❌ Summary Error: ${errorText}`, 'error');
+                }
+                
+            } catch (error) {
+                log(`❌ Summary Request Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testTrends() {
+            log('🔄 Testando endpoint /api/analytics/trends...', 'info');
+            
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/analytics/trends?days=7`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token') || 'fake-token'}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                log(`📈 Trends Status: ${response.status}`, response.ok ? 'success' : 'error');
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    log(`✅ Trends data: ${JSON.stringify(data, null, 2)}`, 'success');
+                } else {
+                    const errorText = await response.text();
+                    log(`❌ Trends Error: ${errorText}`, 'error');
+                }
+                
+            } catch (error) {
+                log(`❌ Trends Request Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testDataQuality() {
+            log('🔄 Testando endpoint /api/analytics/data-quality...', 'info');
+            
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/analytics/data-quality`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token') || 'fake-token'}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                log(`🎯 Data Quality Status: ${response.status}`, response.ok ? 'success' : 'error');
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    log(`✅ Data Quality: ${JSON.stringify(data, null, 2)}`, 'success');
+                } else {
+                    const errorText = await response.text();
+                    log(`❌ Data Quality Error: ${errorText}`, 'error');
+                }
+                
+            } catch (error) {
+                log(`❌ Data Quality Request Error: ${error.message}`, 'error');
+            }
+        }
+
         // Teste automático de conexão ao carregar
         setTimeout(testConnection, 1000);
         
-        // Teste automático do ThingSpeak a cada 10 segundos
-        setInterval(testThingSpeak, 10000);
+        // Teste automático do ThingSpeak a cada 15 segundos
+        setInterval(testThingSpeak, 15000);
     </script>
 </body>
 </html>
