@@ -240,10 +240,14 @@ function useFallbackData() {
   // ---- DADOS SIMULADOS PARA FALLBACK ----
   const temp = generateFallbackTemp();
   const hum = generateFallbackHum();
+  const heatIndex = temp + 2 + Math.random() * 3; // Simular índice de calor
   
   updateConnectionStatus('Simulado', 'bg-blue-500');
   lastDataSource = 'simulated';
-  updateUI(temp, hum, 'Simulado');
+  updateUI(temp, hum, 'Simulado', {
+    heatIndex: heatIndex,
+    dataQuality: 85 + Math.random() * 10 // 85-95%
+  });
 }
 
 function updateUI(temp, hum, source = 'Desconhecido', extra = {}) {
