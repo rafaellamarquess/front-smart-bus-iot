@@ -279,22 +279,37 @@ function updateUI(temp, hum, source = 'Desconhecido', extra = {}) {
     return;
   }
 
+  // Fallback para dados simples (sem allSamples)
+  if (temp !== null && hum !== null) {
+    if (tempValue) tempValue.textContent = temp.toFixed(1) + ' °C';
+    if (humValue) humValue.textContent = hum.toFixed(1) + ' %';
+    
+    const now = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    if (tempTime) tempTime.textContent = `${now} (${source})`;
+    if (humTime) humTime.textContent = `${now} (${source})`;
+
+    // ---- ATUALIZA GRÁFICO ----
+    const label = now.substring(0, 8); // Só hora:minuto:segundo
+    chart.data.labels.push(label);
+    chart.data.datasets[0].data.push(temp);
+    chart.data.datasets[1].data.push(hum);
+
+    if (chart.data.labels.length > maxPoints) {
+      chart.data.labels.shift();
+      chart.data.datasets.forEach(ds => ds.data.shift());
+    }
+    chart.update('quiet');
+
+    // Atualiza métricas extras
+    extra.temp = temp;
+    extra.hum = hum;
+    updateExtraMetrics(extra);
+  }
+
   // Aguardando dados reais de ônibus do backend
   if (busListEl) {
     busListEl.innerHTML = '<li class="text-gray-500">Aguardando dados...</li>';
   }
-
-  // ---- ATUALIZA GRÁFICO ----
-  const label = now.substring(0, 8); // Só hora:minuto:segundo
-  chart.data.labels.push(label);
-  chart.data.datasets[0].data.push(temp);
-  chart.data.datasets[1].data.push(hum);
-
-  if (chart.data.labels.length > maxPoints) {
-    chart.data.labels.shift();
-    chart.data.datasets.forEach(ds => ds.data.shift());
-  }
-  chart.update('quiet');
 
   counter++;
 }
@@ -360,7 +375,13 @@ function updateIoTStatus(extra) {
     isConnected = diffMinutes <= 5;
   }
   
-  // Atualizar interface
+  // IGNORAR outliers - só atualizar se não for um alerta de outlier
+  if (extra.alerts && extra.alerts.outliers_detected > 0) {
+    // Se tem outliers, não atualizar o status IoT
+    return;
+  }
+  
+  // Atualizar interface APENAS com status IoT
   if (isConnected) {
     alertsEl.textContent = '🟢 IoT Conectado';
     alertsEl.className = 'text-lg font-bold mt-2 text-green-400';
