@@ -142,7 +142,7 @@ async function loadDashboard() {
   }
 }
 
-// Carregar análise de tendências
+// Carregar análise de tendências simplificada
 async function loadTrends(days = 7) {
   try {
     BACKEND_URL = await getBestBackendUrl();
@@ -154,32 +154,16 @@ async function loadTrends(days = 7) {
     if (response.ok) {
       const data = await response.json();
       console.log('📈 Trends data:', data);
-      updateTrendsDisplay(data);
+      // Usar a função simplificada
+      const simpleTrends = {
+        temperature: data.temperature_trend || { direction: "stable" },
+        humidity: data.humidity_trend || { direction: "stable" }
+      };
+      updateSimpleTrends(simpleTrends);
     }
   } catch (error) {
     console.warn('Erro ao carregar tendências:', error);
-    showFallbackTrends(days);
-  }
-}
-
-// Carregar qualidade dos dados
-async function loadDataQuality() {
-  try {
-    BACKEND_URL = await getBestBackendUrl();
-    console.log('🔗 Analytics Data Quality usando URL:', BACKEND_URL);
-    
-    const response = await fetch(`${BACKEND_URL}/api/analytics/data-quality`, {
-      headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-    });
-    
-    if (response.ok) {
-      const data = await response.json();
-      console.log('🎯 Data quality:', data);
-      updateDataQualityDisplay(data);
-    }
-  } catch (error) {
-    console.warn('Erro ao carregar qualidade dos dados:', error);
-    showFallbackDataQuality();
+    showFallbackTrends();
   }
 }
 
@@ -261,6 +245,11 @@ function updateDashboardSummary(data) {
     const quality = data.current_metrics.data_quality_score;
     if (quality) {
       document.getElementById('avgQuality').textContent = quality.toFixed(1) + '%';
+      // Aplicar cor baseada na qualidade
+      const qualityEl = document.getElementById('avgQuality');
+      qualityEl.className = quality > 90 ? 'text-2xl font-bold text-green-400' : 
+                           quality > 75 ? 'text-2xl font-bold text-yellow-400' : 
+                           'text-2xl font-bold text-red-400';
     }
   }
   
@@ -268,81 +257,40 @@ function updateDashboardSummary(data) {
     document.getElementById('totalOutliers').textContent = data.alerts.outliers_detected || '0';
     document.getElementById('dataFreshness').textContent = data.alerts.data_freshness || 'Boa';
   }
-}
 
-function updateTrendsDisplay(data) {
-  const trendsEl = document.getElementById('trendsAnalysis');
-  
-  if (data.temperature_trend && data.humidity_trend) {
-    trendsEl.innerHTML = `
-      <div class="space-y-3">
-        <div class="p-3 bg-gray-800 rounded">
-          <h4 class="font-semibold text-red-400 mb-2">🌡️ Tendência de Temperatura</h4>
-          <div class="flex items-center gap-2">
-            <span class="text-2xl">${getTrendSymbol(data.temperature_trend.direction)}</span>
-            <span class="font-semibold">${data.temperature_trend.direction}</span>
-            <span class="text-gray-400">(${data.temperature_trend.slope.toFixed(4)})</span>
-          </div>
-          <div class="text-sm text-gray-400 mt-1">${data.temperature_trend.interpretation}</div>
-        </div>
-        
-        <div class="p-3 bg-gray-800 rounded">
-          <h4 class="font-semibold text-blue-400 mb-2">💧 Tendência de Umidade</h4>
-          <div class="flex items-center gap-2">
-            <span class="text-2xl">${getTrendSymbol(data.humidity_trend.direction)}</span>
-            <span class="font-semibold">${data.humidity_trend.direction}</span>
-            <span class="text-gray-400">(${data.humidity_trend.slope.toFixed(4)})</span>
-          </div>
-          <div class="text-sm text-gray-400 mt-1">${data.humidity_trend.interpretation}</div>
-        </div>
-        
-        <div class="text-xs text-gray-500">
-          Período: ${data.period?.start ? new Date(data.period.start).toLocaleDateString() : ''} - 
-          ${data.period?.end ? new Date(data.period.end).toLocaleDateString() : ''} (${data.period?.days || 0} dias)
-        </div>
-      </div>
-    `;
+  // Atualizar tendências simples se disponível
+  if (data.trends) {
+    updateSimpleTrends(data.trends);
   }
 }
 
-function updateDataQualityDisplay(data) {
-  const qualityEl = document.getElementById('dataQualityDetails');
+// Função simplificada para atualizar tendências
+function updateSimpleTrends(trends) {
+  const tempTrend = trends.temperature?.direction || 'stable';
+  const humTrend = trends.humidity?.direction || 'stable';
   
-  if (data.data_quality && data.overview) {
-    qualityEl.innerHTML = `
-      <div class="space-y-3">
-        <div class="grid grid-cols-2 gap-4">
-          <div class="p-3 bg-gray-800 rounded text-center">
-            <div class="text-lg font-bold text-green-400">${data.data_quality.average_score.toFixed(1)}%</div>
-            <div class="text-xs text-gray-400">Qualidade Média</div>
-          </div>
-          <div class="p-3 bg-gray-800 rounded text-center">
-            <div class="text-lg font-bold text-blue-400">${data.overview.recent_readings_24h}</div>
-            <div class="text-xs text-gray-400">Leituras (24h)</div>
-          </div>
-        </div>
-        
-        <div class="p-3 bg-gray-800 rounded">
-          <h4 class="font-semibold mb-2">🚨 Problemas de Validação</h4>
-          <div class="text-sm">
-            <div>Registros inválidos: <span class="text-red-400">${data.validation_issues?.invalid_records || 0}</span></div>
-            <div>Outliers de temperatura: <span class="text-yellow-400">${data.outliers?.temperature_outliers || 0}</span></div>
-            <div>Outliers de umidade: <span class="text-yellow-400">${data.outliers?.humidity_outliers || 0}</span></div>
-          </div>
-        </div>
-        
-        ${data.recommendations && data.recommendations.length > 0 ? `
-          <div class="p-3 bg-blue-900 rounded">
-            <h4 class="font-semibold mb-2">💡 Recomendações</h4>
-            <ul class="text-sm space-y-1">
-              ${data.recommendations.map(rec => `<li>• ${rec}</li>`).join('')}
-            </ul>
-          </div>
-        ` : ''}
-      </div>
-    `;
+  const tempEl = document.getElementById('tempTrend');
+  const humEl = document.getElementById('humTrend');
+  
+  if (tempEl) {
+    tempEl.innerHTML = `${getTrendSymbol(tempTrend)} ${traduzirDirecao(tempTrend)}`;
+  }
+  
+  if (humEl) {
+    humEl.innerHTML = `${getTrendSymbol(humTrend)} ${traduzirDirecao(humTrend)}`;
   }
 }
+
+function traduzirDirecao(direcao) {
+  switch (direcao) {
+    case 'increasing': return 'subindo';
+    case 'decreasing': return 'descendo';
+    case 'stable': return 'estável';
+    default: return direcao;
+  }
+}
+
+
 
 function updateSummaryDisplay(data, timeframe) {
   document.getElementById('currentTimeframe').textContent = timeframe;
@@ -404,56 +352,14 @@ function updateHistoricalChart(readings) {
    FUNÇÕES DE FALLBACK
    -------------------------------------------------------------- */
 
-function showFallbackTrends(days) {
-  const trendsEl = document.getElementById('trendsAnalysis');
-  // Simular estrutura da API conforme documentação
-  const fallbackData = {
-    temperature_trend: {
-      direction: "stable",
-      slope: 0.0,
-      interpretation: "No data available for trend analysis"
-    },
-    humidity_trend: {
-      direction: "stable", 
-      slope: 0.0,
-      interpretation: "No data available for trend analysis"
-    },
-    period: {
-      start: new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString(),
-      end: new Date().toISOString(),
-      days: days
-    }
+function showFallbackTrends() {
+  // Dados fallback simples para tendências
+  const fallbackTrends = {
+    temperature: { direction: "stable" },
+    humidity: { direction: "stable" }
   };
   
-  updateTrendsDisplay(fallbackData);
-}
-
-function showFallbackDataQuality() {
-  // Simular estrutura da API conforme documentação
-  const fallbackData = {
-    data_quality: {
-      average_score: 94.2,
-      minimum_score: 75.0,
-      maximum_score: 100.0
-    },
-    overview: {
-      total_readings: 1520,
-      recent_readings_24h: 144,
-      data_freshness: "good"
-    },
-    validation_issues: {
-      invalid_records: 12
-    },
-    outliers: {
-      temperature_outliers: 15,
-      humidity_outliers: 8,
-      total_outliers: 23
-    },
-    recommendations: [
-      "Verifique os sensores para garantir leituras precisas.",]
-  };
-  
-  updateDataQualityDisplay(fallbackData);
+  updateSimpleTrends(fallbackTrends);
 }
 
 function showFallbackSummary(timeframe) {
@@ -536,7 +442,7 @@ function getTrendSymbol(direction) {
 document.addEventListener('DOMContentLoaded', function() {
   console.log('🚀 Analytics page loaded');
   
-  // Carregar apenas os dados essenciais inicialmente
+  // Carregar dados essenciais inicialmente
   loadDashboard();
   loadHistoricalData();
   
@@ -546,13 +452,9 @@ document.addEventListener('DOMContentLoaded', function() {
   }, 1000);
   
   setTimeout(() => {
-    loadDataQuality();
-  }, 2000);
-  
-  setTimeout(() => {
     loadSummary('24h');
     loadPipelineStats();
-  }, 3000);
+  }, 2000);
   
   // Desabilitar polling automático para evitar travamentos
   // (usuário pode atualizar manualmente se necessário)

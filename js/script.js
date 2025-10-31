@@ -327,31 +327,9 @@ function updateExtraMetrics(extra) {
     }
   }
   
-  if (extra.dataQuality && document.getElementById('dataQualityValue')) {
-    const quality = extra.dataQuality.toFixed(1);
-    const qualityEl = document.getElementById('dataQualityValue');
-    qualityEl.textContent = quality + '%';
-    
-    // Cor baseada na qualidade
-    qualityEl.className = quality > 90 ? 'text-green-400' : quality > 75 ? 'text-yellow-400' : 'text-red-400';
-  }
+  // REMOVIDO: Qualidade dos dados - movido para analytics apenas
   
-  if (extra.trends && document.getElementById('trendsInfo')) {
-    const trendsEl = document.getElementById('trendsInfo');
-    const tempTrend = extra.trends.temperature?.direction || 'stable';
-    const humTrend = extra.trends.humidity?.direction || 'stable';
-    
-    trendsEl.innerHTML = `
-      <div class="text-xs">
-        <span class="text-gray-400">Temp:</span> 
-        <span class="${getTrendColor(tempTrend)}">${getTrendSymbol(tempTrend)} ${tempTrend}</span>
-      </div>
-      <div class="text-xs">
-        <span class="text-gray-400">Hum:</span> 
-        <span class="${getTrendColor(humTrend)}">${getTrendSymbol(humTrend)} ${humTrend}</span>
-      </div>
-    `;
-  }
+  // REMOVIDO: Tendências - movido para analytics apenas
   
   // Atualizar status IoT baseado na idade dos dados
   updateIoTStatus(extra);
@@ -375,13 +353,7 @@ function updateIoTStatus(extra) {
     isConnected = diffMinutes <= 5;
   }
   
-  // IGNORAR outliers - só atualizar se não for um alerta de outlier
-  if (extra.alerts && extra.alerts.outliers_detected > 0) {
-    // Se tem outliers, não atualizar o status IoT
-    return;
-  }
-  
-  // Atualizar interface APENAS com status IoT
+  // SEMPRE atualizar APENAS com status IoT - IGNORAR TUDO SOBRE OUTLIERS
   if (isConnected) {
     alertsEl.textContent = '🟢 IoT Conectado';
     alertsEl.className = 'text-lg font-bold mt-2 text-green-400';
@@ -529,7 +501,6 @@ function updateTrendsDisplay(data) {
 
 function updateDataQualityDisplay(data) {
   const qualityEl = document.getElementById('dataQualityValue');
-  const alertsEl = document.getElementById('alertsInfo');
   
   if (qualityEl && data.data_quality) {
     const quality = data.data_quality.average_score.toFixed(1);
@@ -539,11 +510,7 @@ function updateDataQualityDisplay(data) {
                          'text-red-400 text-2xl font-bold mt-2';
   }
   
-  if (alertsEl && data.outliers) {
-    const totalOutliers = data.outliers.total_outliers || 0;
-    alertsEl.textContent = totalOutliers > 0 ? `⚠️ ${totalOutliers} outliers` : '✅ Normal';
-    alertsEl.className = `text-lg font-bold mt-2 ${totalOutliers > 0 ? 'text-yellow-400' : 'text-green-400'}`;
-  }
+  // REMOVIDO: Não exibir outliers no dashboard principal
 }
 
 function updateSummaryDisplay(data) {
