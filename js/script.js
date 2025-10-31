@@ -27,8 +27,8 @@ async function getBestBackendUrl() {
   return "https://back-smart-bus-iot-nyp0.onrender.com";
 }
 
-let BACKEND_URL = "https://back-smart-bus-iot-nyp0.onrender.com"; // Inicializar com Render
-const pollInterval = 10000;                        // 10 segundos (ThingSpeak sincronizado)
+let BACKEND_URL = "http://localhost:8001"; // Inicializar com localhost
+const pollInterval = 20000;                       // 20 segundos
 const maxPoints = 30;                              // pontos no gráfico
 
 // Adicionar status de conexão na UI
@@ -77,7 +77,7 @@ let currentEndpointIndex = 0;
 const API_ENDPOINTS = [
   {
     name: 'Dados ThingSpeak',
-    url: '/api/thingspeak/thingspeak?results=10',
+    url: '/api/sensors/thingspeak?results=10',
     parser: 'thingspeak_direct'
   },
   {
@@ -279,13 +279,6 @@ function updateUI(temp, hum, source = 'Desconhecido', extra = {}) {
     return;
   }
 
-  // ...código antigo para fallback e outros endpoints...
-  // if (busListEl) {
-  //   busListEl.innerHTML = buses.length
-  //     ? buses.map(b => `<li class="text-green-400">${b}</li>`).join('')
-  //     : '<li class="text-gray-500">—</li>';
-  // }
-  
   // Aguardando dados reais de ônibus do backend
   if (busListEl) {
     busListEl.innerHTML = '<li class="text-gray-500">Aguardando dados...</li>';
@@ -345,11 +338,35 @@ function updateExtraMetrics(extra) {
     `;
   }
   
-  if (extra.alerts && document.getElementById('alertsInfo')) {
-    const alertsEl = document.getElementById('alertsInfo');
-    const outliers = extra.alerts.outliers_detected || 0;
-    alertsEl.textContent = outliers > 0 ? `⚠️ ${outliers} outliers` : '✅ Normal';
-    alertsEl.className = outliers > 0 ? 'text-yellow-400' : 'text-green-400';
+  // Atualizar status IoT baseado na idade dos dados
+  updateIoTStatus(extra);
+}
+
+// Função para verificar status IoT em tempo real
+function updateIoTStatus(extra) {
+  const alertsEl = document.getElementById('alertsInfo');
+  if (!alertsEl) return;
+  
+  let isConnected = false;
+  let lastDataTime = null;
+  
+  // Verificar se temos dados recentes do ThingSpeak
+  if (extra.createdAt) {
+    lastDataTime = new Date(extra.createdAt);
+    const now = new Date();
+    const diffMinutes = (now - lastDataTime) / (1000 * 60); // Diferença em minutos
+    
+    // IoT considerado "conectado" se dados são de até 5 minutos atrás
+    isConnected = diffMinutes <= 5;
+  }
+  
+  // Atualizar interface
+  if (isConnected) {
+    alertsEl.textContent = '🟢 IoT Conectado';
+    alertsEl.className = 'text-lg font-bold mt-2 text-green-400';
+  } else {
+    alertsEl.textContent = '🔴 IoT Desconectado';
+    alertsEl.className = 'text-lg font-bold mt-2 text-red-400';
   }
 }
 
