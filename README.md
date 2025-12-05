@@ -20,7 +20,7 @@ Dashboard web para monitoramento de paradas de ônibus inteligentes, exibindo te
 
 ```bash
 git clone https://github.com/heytorpimentell/Frontend--Smart-Bus-Stop.git
-cd Frontend--Smart-Bus-Stop
+cd front-smart-bus-iot
 npm install
 ```
 

@@ -134,7 +134,7 @@ async function loadDashboard() {
     
     if (response.ok) {
       const data = await response.json();
-      console.log('📊 Dashboard data:', data);
+      console.log('Dashboard data:', data);
       updateDashboardSummary(data);
     }
   } catch (error) {
@@ -146,14 +146,14 @@ async function loadDashboard() {
 async function loadTrends(days = 7) {
   try {
     BACKEND_URL = await getBestBackendUrl();
-    console.log('🔗 Analytics Trends usando URL:', BACKEND_URL);
+    console.log('Analytics Trends usando URL:', BACKEND_URL);
     const response = await fetch(`${BACKEND_URL}/api/analytics/trends?days=${days}`, {
       headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
     });
     
     if (response.ok) {
       const data = await response.json();
-      console.log('📈 Trends data:', data);
+      console.log('Trends data:', data);
       // Usar a função simplificada
       const simpleTrends = {
         temperature: data.temperature_trend || { direction: "stable" },
@@ -171,7 +171,7 @@ async function loadTrends(days = 7) {
 async function loadSummary(timeframe = '24h') {
   try {
     BACKEND_URL = await getBestBackendUrl();
-    console.log('🔗 Analytics Summary usando URL:', BACKEND_URL);
+    console.log('Analytics Summary usando URL:', BACKEND_URL);
     
     const response = await fetch(`${BACKEND_URL}/api/analytics/summary?timeframe=${timeframe}`, {
       headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
@@ -179,7 +179,7 @@ async function loadSummary(timeframe = '24h') {
     
     if (response.ok) {
       const data = await response.json();
-      console.log('📊 Summary data:', data);
+      console.log('Summary data:', data);
       updateSummaryDisplay(data, timeframe);
     }
   } catch (error) {
@@ -192,7 +192,7 @@ async function loadSummary(timeframe = '24h') {
 async function loadPipelineStats() {
   try {
     BACKEND_URL = await getBestBackendUrl();
-    console.log('🔗 Analytics Pipeline Stats usando URL:', BACKEND_URL);
+    console.log('Analytics Pipeline Stats usando URL:', BACKEND_URL);
     
     const response = await fetch(`${BACKEND_URL}/api/analytics/pipeline-stats`, {
       headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
@@ -200,7 +200,7 @@ async function loadPipelineStats() {
     
     if (response.ok) {
       const data = await response.json();
-      console.log('⚙️ Pipeline stats:', data);
+      console.log('Pipeline stats:', data);
       updatePipelineDisplay(data);
     }
   } catch (error) {
@@ -213,7 +213,7 @@ async function loadPipelineStats() {
 async function loadHistoricalData() {
   try {
     BACKEND_URL = await getBestBackendUrl();
-    console.log('🔗 Analytics Historical Data usando URL:', BACKEND_URL);
+    console.log('Analytics Historical Data usando URL:', BACKEND_URL);
     // Limitar para apenas 5 pontos para evitar travamento
     const response = await fetch(`${BACKEND_URL}/api/sensors/readings?limit=5`, {
       headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
@@ -221,7 +221,7 @@ async function loadHistoricalData() {
     
     if (response.ok) {
       const data = await response.json();
-      console.log('📈 Historical data:', data);
+      console.log('Historical data:', data);
       updateHistoricalChart(data.readings);
     }
   } catch (error) {
@@ -376,7 +376,7 @@ function showFallbackSummary(timeframe) {
   document.getElementById('humMax').textContent = (hum + 10).toFixed(0) + '%';
   
   document.getElementById('heatIndexAvg').textContent = (temp + 2).toFixed(1) + '°C';
-  document.getElementById('currentTimeframe').textContent = timeframe + ' (simulado)';
+  document.getElementById('currentTimeframe').textContent = timeframe;
 }
 
 function showFallbackPipeline() {
@@ -426,15 +426,6 @@ function showFallbackHistorical() {
    FUNÇÕES UTILITÁRIAS
    -------------------------------------------------------------- */
 
-function getTrendSymbol(direction) {
-  switch (direction) {
-    case 'increasing': return '📈';
-    case 'decreasing': return '📉';
-    case 'stable': return '➡️';
-    default: return '❓';
-  }
-}
-
 /* --------------------------------------------------------------
    INICIALIZAÇÃO
    -------------------------------------------------------------- */
@@ -459,5 +450,5 @@ document.addEventListener('DOMContentLoaded', function() {
   // Desabilitar polling automático para evitar travamentos
   // (usuário pode atualizar manualmente se necessário)
   
-  console.log('📊 Analytics initialized');
+  console.log('Analytics initialized');
 });

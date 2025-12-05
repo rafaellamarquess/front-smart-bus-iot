@@ -127,7 +127,7 @@ async function tryEndpoint(endpoint) {
 
     if (response.ok) {
       const data = await response.json();
-      console.log(`📊 ${endpoint.name} - Dados:`, data);
+      console.log(` ${endpoint.name} - Dados:`, data);
       
       // Parseia os dados baseado no tipo de endpoint
       const parsedData = parseEndpointData(data, endpoint.parser);
@@ -230,7 +230,15 @@ function parseEndpointData(data, parserType) {
 
 function updateConnectionStatus(text, className) {
   connectionStatus.textContent = text;
-  connectionStatus.className = `fixed top-4 right-4 px-3 py-1 rounded text-sm text-white ${className}`;
+connectionStatus.textContent = ""; // remove texto
+
+connectionStatus.className = `
+  fixed bottom-4 right-4
+  w-4 h-4 rounded-full border border-white/30
+  ${className}
+`;
+
+
 }
 
 // Função para calcular índice de calor (Heat Index)
