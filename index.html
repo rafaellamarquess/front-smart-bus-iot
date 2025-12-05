@@ -12,10 +12,6 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <!-- CONFIG -->
   <script src="./js/config.js"></script>
-  <!-- LEAFLET MAP -->
-<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css">
-<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-
 </head>
 <body class="bg-gradient-to-b from-[#071033] to-[#07111f] text-gray-100 min-h-screen flex flex-col">
 
@@ -29,13 +25,13 @@
         </div>
         <div>
           <h1 class="text-xl font-semibold">Smart Bus Stop</h1>
-          <p class="text-gray-400 text-sm"> Desloque-se com mais conforto</p>
+          <p class="text-gray-400 text-sm">Indicadores: Temperatura • Umidade • Ônibus</p>
         </div>
       </div>
 
       <!-- NAVEGAÇÃO -->
       <div class="flex gap-3 items-center">
-        <a href="analytics.html" class="text-sm text-blue-400 hover:underline">Analytics</a>
+        <a href="analytics.html" class="text-sm text-blue-400 hover:underline">📊 Analytics</a>
         <button onclick="logout()" class="text-sm text-red-400 hover:underline">Sair</button>
       </div>
     </header>
@@ -45,7 +41,7 @@
       <!-- TEMPERATURA -->
       <div class="bg-[#0b1220] border border-gray-700 rounded-xl shadow-lg p-5 flex flex-col">
         <h3 class="text-sm text-gray-400 flex items-center gap-2">
-          Temperatura
+          🌡️ Temperatura
         </h3>
         <div class="text-2xl font-bold mt-2" id="tempValue">-- °C</div>
         <div class="text-xs text-gray-400 mt-1">Última leitura: <span id="tempTime">—</span></div>
@@ -54,7 +50,7 @@
       <!-- UMIDADE -->
       <div class="bg-[#0b1220] border border-gray-700 rounded-xl shadow-lg p-5 flex flex-col">
         <h3 class="text-sm text-gray-400 flex items-center gap-2">
-           Umidade
+          💧 Umidade
         </h3>
         <div class="text-2xl font-bold mt-2" id="humValue">-- %</div>
         <div class="text-xs text-gray-400 mt-1">Última leitura: <span id="humTime">—</span></div>
@@ -63,30 +59,38 @@
       <!-- ÍNDICE DE CALOR -->
       <div class="bg-[#0b1220] border border-gray-700 rounded-xl shadow-lg p-5 flex flex-col">
         <h3 class="text-sm text-gray-400 flex items-center gap-2">
-          Índice de Calor
+          🔥 Índice de Calor
         </h3>
         <div class="text-2xl font-bold mt-2" id="heatIndexValue">-- °C</div>
         <div class="text-xs text-gray-400 mt-1">Sensação térmica calculada</div>
       </div>
 
+      <!-- STATUS IoT -->
+      <div class="bg-[#0b1220] border border-gray-700 rounded-xl shadow-lg p-5 flex flex-col">
+        <h3 class="text-sm text-gray-400 flex items-center gap-2">
+          📡 Status
+        </h3>
+        <div class="text-lg font-bold mt-2" id="alertsInfo">🔴 Desconectado</div>
+        <div class="text-xs text-gray-400 mt-1">Conexão em tempo real</div>
+      </div>
 
+      <!-- ÔNIBUS -->
+      <div class="bg-[#0b1220] border border-gray-700 rounded-xl shadow-lg p-5 flex flex-col">
+        <h3 class="text-sm text-gray-400 flex items-center gap-2">
+          🚌 Ônibus na parada
+        </h3>
+        <ul id="busList" class="list-disc list-inside text-sm mt-2 text-gray-200">
+          <li>—</li>
+        </ul>
+      </div>
     </section>
 
-    <main class="mt-2">
-      <!-- MAPA DE PARADAS -->
-<section class="mt-6 bg-[#0b1220] border border-gray-700 rounded-xl shadow-lg mt-2 p-5">
-  <h3 class="text-sm text-gray-400 mb-3">Selecione seu ponto de ônibus</h3>
-  <div id="busMap" class="w-full h-96 rounded-lg"></div>
-</section>
-
     <!-- GRÁFICO -->
-  
-      <div class="bg-[#0b1220] border border-gray-700 rounded-xl shadow-lg p-5 mt-4">
+    <main class="mt-6">
+      <div class="bg-[#0b1220] border border-gray-700 rounded-xl shadow-lg p-5">
         <!-- CORRIGIDO: apenas um id -->
         <canvas id="lineChart" class="w-full h-64"></canvas>
       </div>
-
-
     </main>
 
     <!-- RODAPÉ -->
@@ -97,7 +101,5 @@
   </div>
 
   <script src="./js/script.js"></script>
-  <script src="./js/bus.js"></script>
-
 </body>
 </html>
